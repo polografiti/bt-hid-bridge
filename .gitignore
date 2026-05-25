@@ -1,0 +1,23 @@
+# ESP-IDF build artifacts
+esp32_firmware/build/
+esp32_firmware/sdkconfig
+esp32_firmware/managed_components/
+esp32_firmware/.cache/
+esp32_firmware/dependencies.lock
+**/*.map
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
