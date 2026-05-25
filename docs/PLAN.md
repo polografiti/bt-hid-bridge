@@ -12,58 +12,53 @@ receives the HID events and injects them as real system input.
 
 | Board      | BT Classic | BLE   | Verdict |
 |------------|-----------|-------|---------|
-| ESP32      | ✅ Yes     | ✅ Yes | **Best choice** |
+| ESP32      | ✅ Yes     | ✅ Yes | Full coverage |
 | ESP32-S3   | ❌ No      | ✅ Yes | BLE HID only |
-| ESP32-C3   | ❌ No      | ✅ Yes | BLE HID only, single-core |
+| **ESP32-C3** | ❌ No    | ✅ Yes | **Board in use — BLE only** |
 
-**Recommendation: ESP32 classic (ESP32-WROOM-32 or ESP32-DevKitC).**
+**Board in use: ESP32-C3 Super Mini**
+- Built-in USB-JTAG (no external CH340/CP2102 needed), port: `/dev/cu.usbmodem1101`
+- Single-core RISC-V @ 160 MHz, 4 MB flash
+- **BLE 5.0 only — no Bluetooth Classic (BR/EDR)**
 
-Reasons:
-- Supports both Bluetooth Classic (BR/EDR) and BLE in a single chip.
-- Most commercial keyboards and mice use Bluetooth Classic HID (not BLE).
-- Modern gaming peripherals may use BLE or dual-mode — ESP32 handles both.
-- ESP32-S3 and C3 are BLE-only, which would exclude most keyboards.
+**Implication:** this bridge only works with **BLE HID** peripherals. Classic BT
+keyboards/mice (most pre-2018 hardware) are out of scope for this board.
+BLE HID devices that work: Apple Magic Keyboard/Mouse, Logitech MX series,
+most modern slim keyboards and mice marketed as "BLE" or "Bluetooth 5".
+
+If Classic BT support is needed later, swapping in an **ESP32 classic** board is
+the path — zero firmware logic changes, just re-target and add `esp_bt_hidh`.
 
 ---
 
 ## 2. Bluetooth HID Host — Feasibility
 
 ### Bluetooth Classic HID Host
-- **API:** `esp_bt_hidh` in ESP-IDF (component `bt`, profile `HH`)
-- Available since ESP-IDF 4.x, stable in ESP-IDF 5.x
-- Pairs and connects to HID Class devices (keyboards, mice, gamepads)
-- Receives raw HID reports via callback
-- Requires parsing HID Report Descriptors to decode key codes / axes
+- **NOT available on ESP32-C3.** Requires ESP32 classic.
+- API would be `esp_bt_hidh` — documented for future board upgrade.
 
-### BLE HID Host
-- **API:** `esp_ble_hidh` in ESP-IDF 5.0+
-- Connects to BLE HID peripherals (many modern BT mice, some keyboards)
-- Simpler report structure for standard keyboard/mouse profiles
-- GATT-based; reports delivered via notification callbacks
-
-### Strategy
-Start with **BLE HID Host** (simpler API, well-documented in ESP-IDF examples).
-Add **Classic BT HID Host** in a later milestone for legacy keyboard support.
-Both can coexist on the ESP32; they share the same `esp_hidh` abstraction layer
-in ESP-IDF 5.0+, which wraps both transports under one callback interface.
+### BLE HID Host (active target)
+- **API:** NimBLE host stack via `esp_nimble_hci` + `host/ble_hs.h` (ESP-IDF 5.x)
+- NimBLE is preferred over Bluedroid on C3: smaller RAM footprint, better docs
+- Scan → connect → discover GATT services → subscribe to HID Report characteristic
+- HID reports delivered via GATT notification callback
+- Standard BLE HID profile (0x1812) covers keyboard + mouse + consumer control
 
 ### ESP-IDF vs Arduino
-- **ESP-IDF** is the correct choice: the `esp_hidh` host API does not exist in
-  the Arduino core. Arduino `BleKeyboard` etc. are *device* (peripheral) libs.
-- Use **ESP-IDF 5.1 or later** for the unified `esp_hidh` with dual-mode support.
+- **ESP-IDF** is required: no BLE HID Host implementation exists in Arduino core.
+- Use **ESP-IDF 5.1+**, target `esp32c3`, NimBLE stack.
 
 ---
 
 ## 3. Recommended Libraries / APIs
 
-### ESP32 (ESP-IDF)
+### ESP32-C3 (ESP-IDF 5.1+)
 | Purpose | Component / API |
 |---------|----------------|
 | Wi-Fi | `esp_wifi`, `esp_netif` |
-| BT Classic HID Host | `bt` → `esp_bt_hidh_api.h` |
-| BLE HID Host | `bt` → `esp_ble_hidh.h` |
-| Unified HID Host | `esp_hidh` (ESP-IDF 5.0+) |
-| NVS (config storage) | `nvs_flash` |
+| BLE HID Host | NimBLE → `host/ble_hs.h`, `host/ble_gatt.h` |
+| BLE scan/connect | `host/ble_gap.h` |
+| NVS (config/pairing) | `nvs_flash` |
 | UDP socket | POSIX `lwip/sockets.h` |
 | FreeRTOS tasks | `freertos/FreeRTOS.h` |
 

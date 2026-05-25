@@ -2,10 +2,11 @@
 
 ## Hardware Required
 
-- **ESP32-WROOM-32** or **ESP32-DevKitC** (classic ESP32, not S3/C3)
-- USB cable (data, not charge-only)
+- **ESP32-C3 Super Mini** (BLE 5.0, built-in USB-JTAG — no adapter needed)
+- USB-C cable (data, not charge-only)
 - 2.4 GHz Wi-Fi access point
 - PC running Windows (primary) or macOS/Linux
+- BLE HID peripheral to test (Apple Magic Mouse/Keyboard, Logitech MX, any BLE mouse/keyboard)
 
 ---
 
@@ -50,17 +51,17 @@ Edit `esp32_firmware/config.h`:
 ```bash
 cd bt-hid-bridge/esp32_firmware
 
-# Set target (only needed once)
-idf.py set-target esp32
+# Set target (only needed once) — C3 Super Mini
+idf.py set-target esp32c3
 
 # Build
 idf.py build
 
-# Flash (replace PORT with your serial port)
-# macOS:  /dev/cu.usbserial-XXXX  or  /dev/cu.SLAB_USBtoUART
-# Linux:  /dev/ttyUSB0
-# Windows: COM3 (check Device Manager)
-idf.py -p /dev/cu.usbserial-0001 flash monitor
+# Flash — C3 Super Mini uses built-in USB-JTAG (no CH340/CP2102)
+# macOS:  /dev/cu.usbmodem1101
+# Linux:  /dev/ttyACM0
+# Windows: COMx (check Device Manager → Ports → "USB Serial Device")
+idf.py -p /dev/cu.usbmodem1101 flash monitor
 ```
 
 The `monitor` command shows ESP32 serial output. Press `Ctrl+]` to exit.

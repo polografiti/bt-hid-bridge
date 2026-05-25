@@ -61,7 +61,10 @@ See [docs/SETUP.md](docs/SETUP.md) for complete instructions.
 
 ## Requirements
 
-- ESP32 classic (WROOM-32 or DevKitC) — **not** S3 or C3 (no Classic BT)
-- ESP-IDF 5.1+
+- **ESP32-C3 Super Mini** — BLE 5.0, built-in USB-JTAG, port `/dev/cu.usbmodem1101`
+- ESP-IDF 5.1+, target `esp32c3`
 - Python 3.8+ with `pynput`
 - 2.4 GHz Wi-Fi network
+- BLE HID peripheral (Apple Magic, Logitech MX, any BLE keyboard/mouse)
+
+> Classic Bluetooth (BR/EDR) is **not supported** on C3. For legacy keyboard support, swap in an ESP32 classic board — no firmware logic changes needed.
